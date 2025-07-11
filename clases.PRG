@@ -1,0 +1,667 @@
+**************************************************
+*-- Class:        barraprogreso (c:\demo\controles.vcx)
+*-- ParentClass:  container
+*-- BaseClass:    container
+*
+DEFINE CLASS barraprogreso AS container
+
+
+	Width = 391
+	Height = 26
+	valorminimo = 0
+	valormaximo = 0
+	valoractual = 0
+	Name = "barraprogreso"
+	mostrarporcentaje = .F.
+
+
+	ADD OBJECT shpfigura AS shape WITH ;
+		Top = 0, ;
+		Left = 0, ;
+		Height = 37, ;
+		Width = 397, ;
+		BorderStyle = 1, ;
+		FillStyle = 0, ;
+		FillColor = RGB(0,0,128), ;
+		Name = "shpFigura"
+
+
+	ADD OBJECT txtporcentaje AS textbox WITH ;
+		Alignment = 3, ;
+		BackStyle = 0, ;
+		BorderStyle = 0, ;
+		Value = 0, ;
+		Enabled = .F., ;
+		Format = "", ;
+		Height = 25, ;
+		InputMask = "###.##", ;
+		Left = 0, ;
+		ReadOnly = .T., ;
+		Top = 0, ;
+		Width = 49, ;
+		ForeColor = RGB(255,255,255), ;
+		DisabledForeColor = RGB(255,255,255), ;
+		Name = "txtPorcentaje"
+
+
+	PROCEDURE inicializar
+		lParameters lMinimo, lMaximo
+		this.ValorMinimo = iif(type("lMinimo")="N",lMinimo,1)
+		this.ValorActual = 0
+		this.ValorMaximo = iif(type("lMaximo")="N",lMaximo,100)
+		this.refresh
+	ENDPROC
+
+
+	PROCEDURE terminar
+		this.ValorActual = this.ValorMaximo
+		this.refresh
+	ENDPROC
+
+
+	PROCEDURE progresar
+		lParameters lActual
+		if type("lActual") = "N"
+			if between(lActual,this.ValorMinimo,this.ValorMaximo)
+				this.ValorActual = lActual
+				this.refresh
+			endif
+		endif
+	ENDPROC
+
+
+	PROCEDURE Refresh
+		local lProporcion, lRango
+		lRango = this.ValorMaximo - This.ValorMinimo + 1
+		lProporcion = (this.ValorActual - this.ValorMinimo + 1 )
+		this.shpFigura.width = this.width * lProporcion / lRango
+		this.txtPorcentaje.Value = lProporcion * 100 / lRango
+		this.shpFigura.ToolTipText = str(lProporcion * 100 / lRango,6,2)+" %"
+	ENDPROC
+
+
+	PROCEDURE Init
+		this.shpFigura.height = this.height
+		this.shpFigura.width = 0
+		this.txtPorcentaje.left = int((this.width - this.txtPorcentaje.width)/2 )
+		this.txtPorcentaje.visible = this.MostrarPorcentaje
+	ENDPROC
+
+
+ENDDEFINE
+*
+*-- EndDefine: barraprogreso
+**************************************************
+**************************************************
+*-- Class:        dlgbusqueda (c:\proyectos\visitar\dlgbusqueda.vcx)
+*-- ParentClass:  form
+*-- BaseClass:    form
+*
+DEFINE CLASS dlgbusqueda AS form
+
+
+	Height = 98
+	Width = 235
+	DoCreate = .T.
+	AutoCenter = .T.
+	Caption = "Busqueda"
+	ControlBox = .F.
+	HalfHeightCaption = .T.
+	WindowType = 1
+	AlwaysOnTop = .T.
+	ctxtbusqueda = ""
+	ncontregis = 1
+	cnombrecampo = ""
+	ccampo = ""
+	llrellenceros = .F.
+	Name = "dlgbusqueda"
+	coldfilter = .F.
+	lactivoindex = .F.
+	lcaccionejecutar = .F.
+	DIMENSION ga___busca[1]
+
+
+	ADD OBJECT lblbusqueda AS label WITH ;
+		AutoSize = .T., ;
+		Caption = "( F3 - Busca siguiente coincidencia )", ;
+		Height = 17, ;
+		Left = 12, ;
+		Top = 0, ;
+		Width = 201, ;
+		ForeColor = RGB(128,0,0), ;
+		Name = "lblBusqueda"
+
+
+	ADD OBJECT txtbusqueda AS textbox WITH ;
+		ControlSource = "this.parent.cTxtBusqueda", ;
+		Height = 22, ;
+		Left = 6, ;
+		SelectOnEntry = .T., ;
+		Top = 21, ;
+		Width = 218, ;
+		Name = "txtBusqueda"
+
+
+	ADD OBJECT chkcase AS checkbox WITH ;
+		Top = 47, ;
+		Left = 6, ;
+		Height = 16, ;
+		Width = 81, ;
+		FontSize = 8, ;
+		AutoSize = .T., ;
+		Caption = "\<M/m Sensible", ;
+		ToolTipText = "Distingue entre mayúsculas y minúsculas", ;
+		Name = "chkCase"
+
+
+	ADD OBJECT chkposicion AS checkbox WITH ;
+		Top = 47, ;
+		Left = 103, ;
+		Height = 16, ;
+		Width = 120, ;
+		FontSize = 8, ;
+		AutoSize = .T., ;
+		Caption = "\<En cualquier posición", ;
+		Name = "chkPosicion"
+
+
+	ADD OBJECT cmdbuscar AS commandbutton WITH ;
+		Top = 67, ;
+		Left = 7, ;
+		Height = 22, ;
+		Width = 101, ;
+		FontSize = 8, ;
+		Caption = "\<Buscar", ;
+		Default = .T., ;
+		Name = "cmdBuscar"
+
+
+	ADD OBJECT cmdcerrar AS commandbutton WITH ;
+		Top = 67, ;
+		Left = 123, ;
+		Height = 22, ;
+		Width = 101, ;
+		FontSize = 8, ;
+		Cancel = .T., ;
+		Caption = "\<Cerrar", ;
+		Name = "cmdCerrar"
+
+
+	PROCEDURE masigvalores
+		LPARAMETERS nKeyCode
+
+		*- ---------------------------------------------------
+		*  PARAMETROS:
+		*		nKeyCode		Tecla pulsada cuando se llama a ésta pantalla
+		*- ---------------------------------------------------
+
+		LOCAL lnPosTag
+
+		THISFORM.mInicializaVal()
+
+		*- Guarda el filtro de la tabla y del índice
+		THISFORM.cOldFilter = IIF( EMPTY(FILTER()), "", " AND " + FILTER() )
+		  
+		*- Número que ocupa el tag de índice
+		lnPosTag	= TAGNO(THISFORM.cCampo)
+
+		THISFORM.lActivoIndex = UPPER(THISFORM.cCampo) == KEY()
+
+		*- Si ya existía el índice, extrae filtro
+		IF lnPosTag > 0
+		  THISFORM.cOldFilter = THISFORM.cOldFilter + ;
+		         IIF( EMPTY(SYS(2021, lnPosTag)), "", " AND " + SYS(2021, lnPosTag) )
+		ENDIF
+
+		KEYBOARD CHR(nKeyCode)
+	ENDPROC
+
+
+	PROCEDURE mbuscadenuevo
+		LOCAL lcExpBusqueda, llEncontrado
+
+		lcExpBusqueda = ThisForm.txtBusqueda.value
+		llEncontrado  = .t.
+
+		*- Si no está vacio
+		IF NOT EMPTY(lcExpBusqueda)
+
+		  WAIT WINDOW NOWAIT "Buscando ...."
+
+		  LOCAL lcTabla, lnpospunto, lnAlen
+		  
+		  lnpospunto = AT(".", THISFORM.cNombreCampo)
+		  lctabla = ""
+		  
+		  *- Nombre de tabla y campo
+		  IF lnpospunto > 0
+		    lctabla = SUBSTR(THISFORM.cNombreCampo, 1, lnpospunto - 1)
+		  ENDIF
+
+		  IF EMPTY(lcTabla)
+		    WAIT WINDOW 'No se puede realizar la búsqueda' TIMEOUT 1
+		    RETURN 
+		  ENDIF
+		  
+		  SELECT(lcTabla)
+		  
+		  *- Número de registros
+		  lnAlen = ALEN(THISFORM.ga___Busca,1)
+		  THISFORM.nContRegis = THISFORM.nContRegis + 1
+
+		  *- Si no hay mas que buscar
+		  IF THISFORM.nContRegis > lnAlen
+		    IF .F.	&&MESSAGEBOX('No se encuentran mas coincidencias de : ' + CHR(13) + lcExpBusqueda + ;
+		               CHR(13) + '¿ Buscar otra vez desde el principio ?', ;
+		               36, 'Atención') <> 6
+		      WAIT CLEAR
+		      RETURN .F.
+		    ELSE
+		      THISFORM.nContRegis = 1
+		    ENDIF
+		  ENDIF
+		               
+		  IF THISFORM.ga___Busca(THISFORM.nContRegis) > 0
+		    GO ( THISFORM.ga___Busca(THISFORM.nContRegis) ) IN (lcTabla)
+		  ENDIF
+
+		  WAIT CLEAR
+
+		ENDIF
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE mcerosizqda
+		LPARAMETERS lcCaracter, oObjeto
+
+		LOCAL lcCaracter, lnPosPunto, lnLen, lnLen2
+
+		IF TYPE('oObjeto') <> 'O'
+			RETURN .F.
+		ENDIF
+
+		*- Si está en blanco no hace nada
+		IF EMPTY(oObjeto.value)
+		  RETURN
+		ENDIF
+		  
+		*- Si no se pasa caracter ó es blanco
+		IF EMPTY( lcCaracter )
+		  *- Si no es un caracter
+		  IF TYPE("lcCaracter") <> "C"
+		    lcCaracter = "0"
+		  ENDIF
+		ENDIF
+		 
+		DO CASE
+		  *-  Si la variables es tipo caracter
+		  CASE TYPE('oObjeto.Value') = "N"
+		    IF oObjeto.Value < 0
+		      oObjeto.Value = 0
+		    ENDIF
+
+		  *-  Si la variables es tipo caracter
+		  CASE TYPE('oObjeto.Value') = "C"
+		  
+		    *- Si el caracter de la izquierda es un -, lo quita
+		    IF LTRIM(oObjeto.Value) = '-'
+		      oObjeto.Value = STRTRAN(oObjeto.Value, '-', " ", 1, 1)
+		    ENDIF
+		    
+		    *- Si contiene solamente números, y el caracter es 0, se rellena
+		    IF ( THISFORM.mexpnumerica(oObjeto.Value) AND lcCaracter = "0" )
+		     
+		      lnPosPunto = AT('.',oObjeto.Value)
+		      lnLen      = LEN( oObjeto.Value)
+		     
+		      *- Si ha puesto un punto, rellena con ceros en el punto
+		      IF lnPosPunto > 0
+		        DO WHILE lnPosPunto > 0
+		          *- Caracteres escritos sin punto
+		          lnLen2      = LEN( ALLTRIM(oObjeto.Value) ) -1
+		          lcCeros	   = REPLICATE('0', lnLen - lnLen2)
+		          oObjeto.Value = STUFF(oObjeto.Value, lnPosPunto, 1, lcCeros)
+		          lnPosPunto = AT('.',oObjeto.Value)
+		        ENDDO
+		      ELSE
+		        oObjeto.Value = PADL( ALLTRIM(oObjeto.Value), lnLen, lcCaracter)
+		      ENDIF
+		    ENDIF
+		ENDCASE
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE mexpnumerica
+		LPARAMETERS lccadena
+
+		LOCAL lcVarUna, lcValidAux
+
+		IF ISALPHA(lcCadena)
+		  RETURN .F.
+		ENDIF
+
+		lcVarUna = ""
+		lcValidAux = lcCadena
+
+		*- Procesa la cadena
+		DO WHILE LEN(lcValidAux) > 1
+
+		  *- Resto de objetos, menos lcVarUna extraida
+		  lcValidAux = SUBSTR(lcValidAux, 2)
+		  
+		  *- Si es alfanumérico
+		  IF ISALPHA(lcValidAux)
+		    RETURN .F.
+		  ENDIF
+		  
+		ENDDO
+
+		*- Si es alfanumérico
+		IF ISALPHA(lcValidAux)
+		  RETURN .F.
+		ENDIF
+
+		RETURN .T.
+	ENDPROC
+
+
+	PROCEDURE minicializaval
+		LOCAL lnLenCampo
+
+		lnLenCampo = FSIZE(THISFORM.cCampo)
+
+		DO CASE
+		  *- Si el tipo del campo es numérico
+		  CASE TYPE( THISFORM.cNombreCampo ) $ "YNFBI"
+		    THISFORM.txtBusqueda.value = 0
+		    THISFORM.txtBusqueda.Inputmask = REPLICATE("9", lnLenCampo)
+		    
+		  CASE TYPE( THISFORM.cNombreCampo ) $ "C"
+		    THISFORM.txtBusqueda.value = ""
+		    THISFORM.txtBusqueda.Inputmask = REPLICATE("X", lnLenCampo)
+
+		  CASE TYPE( THISFORM.cNombreCampo ) $ "TD"
+		    THISFORM.txtBusqueda.value = {//}
+
+		  CASE TYPE( THISFORM.cNombreCampo ) $ "L"
+		ENDCASE
+	ENDPROC
+
+
+	PROCEDURE Activate
+		PUSH KEY CLEAR
+		ThisForm.txtBusqueda.Setfocus()
+	ENDPROC
+
+
+	PROCEDURE Init
+		LPARAMETERS lcNombreCampo, lcCaption, plrellenceros
+
+		*- ---------------------------------------------------
+		*  PARAMETROS:
+		*		lcNombreCampo	Nombre del campo que llama a éste método 
+		*		lcCaption		Título de la columna
+		*- ---------------------------------------------------
+		THISFORM.cNombreCampo = lcNombreCampo
+		THISFORM.cTxtBusqueda = EVAL(THISFORM.cNombreCampo)
+		THISFORM.caption = 'Buscar por :' + iif(type("lcCaption")="C",lcCaption,"Nombre")
+		THISFORM.cCampo  = RIGHT(THISFORM.cNombreCampo, LEN(THISFORM.cNombreCampo) - ;
+		                    AT('.', THISFORM.cNombreCampo) )
+
+		if type("plrellenceros") = "L"
+			THISFORM.llrellenceros = plrellenceros
+		endif
+
+		THISFORM.mInicializaVal()
+
+		*- Si el tipo es NULL, se inicializa al valor por defecto
+		IF ISNULL(THISFORM.cTxtBusqueda)
+		  THISFORM.cTxtBusqueda = THISFORM.txtBusqueda.value
+		ENDIF
+
+		thisform.lcAccionEjecutar = "thisform.release"
+	ENDPROC
+
+
+	PROCEDURE Error
+		LPARAMETERS nError, cMethod, nLine
+
+		LOCAL llHandledError, ;
+		      laError[7], ;
+		      lcMessage, ;
+		      lnAnswer
+
+		IF EMPTY(cMethod)
+		  cMethod = ""
+		ENDIF
+
+		IF EMPTY(nLine)
+		  nLine = 0
+		ENDIF
+
+		*-- Cargar laError con información de error
+		=AERROR(laError)
+
+		DO CASE
+		  CASE nError = 5    && El registro está fuera de intervalo
+		    THISFORM.nContRegis = THISFORM.nContRegis + 1
+		    KEYBOARD '{F3}'
+
+		  OTHERWISE
+		    ?? CHR(7)
+		    lcMessage = laError(2) + CHR(13) + 'Método :' + cMethod + CHR(13) + ;
+		                'Línea  :' + ALLT(STR(nLine))
+		    lnAnswer = MESSAGEBOX(lcMessage, 34, 'Error')
+		    DO CASE
+		      CASE lnAnswer = 3		&& IDABORT
+		        SUSPEND
+		      CASE lnAnswer = 4		&& IDRETRY
+		        RETRY
+		      OTHERWISE
+		        RETURN
+		    ENDCASE
+		ENDCASE
+
+		RETURN llHandledError
+	ENDPROC
+
+
+	PROCEDURE KeyPress
+		LPARAMETERS nKeyCode, nShiftAltCtrl
+
+		*!*	DO CASE
+		*!*		CASE nKeyCode = 13
+		*!*			Thisform.click()
+		*!*	ENDCASE
+
+
+
+
+		  DO CASE
+		    *- Si pulsa botón delete ó retroceso
+		    CASE INLIST( nKeyCode, 7, 127 )
+		      NODEFAULT
+
+		    *- Si pulsa { ó CTRL+TAB, no hace nada
+			CASE nKeyCode = 123 OR (nShiftAltCtrl = 2 AND nKeyCode = 148)
+
+		      *- Si la tecla pulsada es una tecla válida para empezar busqueda
+		     CASE BETWEEN(nKeyCode, 32, 255)
+
+		      NODEFAULT
+
+		      LOCAL lcClaveBusca, lcOperador, lcNombreCampo, lcTabla, ;
+		        nTiempoPasado
+
+		      this.mAsigValores(nKeyCode)
+		      this.Show()
+
+
+		    *- F3
+		    CASE nKeyCode = -2 AND nShiftAltCtrl = 0
+		*      IF TYPE('THIS.oFormBusq') = 'O'
+		&&        this.oFormBusq.mBuscaDeNuevo()
+		        thisform.mBuscaDeNuevo() && nKeyCode
+		*      ENDIF
+		      
+
+		  ENDCASE
+	ENDPROC
+
+
+	PROCEDURE chkcase.Refresh
+		This.Enabled = TYPE( THISFORM.cNombreCampo ) $ "CM"
+	ENDPROC
+
+
+	PROCEDURE chkposicion.Refresh
+		This.Enabled = TYPE( THISFORM.cNombreCampo ) $ "CM"
+	ENDPROC
+
+
+	PROCEDURE cmdbuscar.Click
+		LOCAL lcExpBusqueda, llEncontrado
+
+		lcExpBusqueda = THISFORM.txtBusqueda.VALUE
+		llEncontrado  = .T.
+
+		*- Si no está vacio
+		IF NOT EMPTY(lcExpBusqueda)
+
+		  WAIT WINDOW NOWAIT "Buscando ...."
+
+		  LOCAL lcOperador, lcTabla, lcTagId, lcExpBusq, lcSelecEjec, lcDbf, ;
+		    lnRegistro, lcExpAux, llExist, lcCampoSelec, lcMensaje, ;
+		    lnpospunto, lcCampo
+
+
+		  lnpospunto = AT(".", THISFORM.cNombreCampo)
+		  lcCampo = THISFORM.cNombreCampo
+		  lcTabla = ""
+
+		  *- Nombre de tabla y campo
+		  IF lnpospunto > 0
+		    lcTabla = SUBSTR(THISFORM.cNombreCampo, 1, lnpospunto - 1)
+		    lcCampo = UPPER(SUBSTR(THISFORM.cNombreCampo, lnpospunto + 1))
+		  ENDIF
+
+		  IF EMPTY(lcTabla)
+		    WAIT WINDOW 'No se puede realizar la búsqueda' TIMEOUT 1
+		    RETURN
+		  ENDIF
+
+		  *- Si hay que rellenar de ceros
+		  IF THISFORM.llrellenceros AND THISFORM.chkPosicion.VALUE = 0
+		    *- Rellena con ceros por la izquierda
+		    THISFORM.mCerosIzqda('0',THISFORM.txtBusqueda)
+		    lcExpBusqueda = THISFORM.txtBusqueda.VALUE
+		  ENDIF
+
+		  lcOperador = '='
+		  lcExpBusq  = lcExpBusqueda
+		  lcCampoSelec = lcCampo + " " + lcOperador
+
+		  *- Si la tabla no está activo ó si lo que creemos que es una tabla, es una expresión
+		  IF USED(lcTabla)
+
+		    SELECT(lcTabla)
+
+		    DIMENSION THISFORM.ga___Busca(1)
+		    THISFORM.ga___Busca = 0
+		    THISFORM.nContRegis = 1
+
+		    IF TYPE( THISFORM.cNombreCampo ) $ "CM"
+		      lcOperador   = 'LIKE'
+
+		      lcExpBusq	 = ALLTRIM(lcExpBusqueda)
+		      lcCampoSelec = lcCampo + " " + lcOperador
+
+		      IF THISFORM.chkCase.VALUE = 0
+		        lcCampoSelec=" UPPER( " + lcCampo + ") " + lcOperador
+		        lcExpBusq = UPPER(lcExpBusq)
+		      ENDIF
+
+		      IF THISFORM.chkPosicion.VALUE = 0
+		        lcExpBusq = lcExpBusq + "%"
+		      ELSE
+		        *- Si se activa ésta línea, busca por coincidencia en cualquier posición
+		        lcExpBusq = "%" + lcExpBusq + "%"
+		      ENDIF
+
+		    ENDIF
+
+		    *- Tabla con path
+		    lcDbf = DBF(lcTabla)
+
+		    *- Si se está buscando en una visa
+		    IF RIGHT(lcDbf,3) = 'TMP'
+		      lcDbf = lcTabla
+		    ENDIF
+
+		    lcSelecEjec = [ SELECT recno() ;
+		FROM ] + lcDbf + ;
+		      [ WHERE ] + ;
+		      lcCampoSelec + [ lcExpBusq ] + ;
+		      THISFORM.cOldFilter + ;
+		      IIF(THISFORM.lActivoIndex,' ORDER BY ' + lcCampo + ;
+		      IIF( DESCENDING(TAGNO(lcCampo)), ' DESC ', ''), '' ) + ;
+		      [ INTO ARRAY THISFORM.ga___Busca ]
+
+		    &lcSelecEjec
+
+		    IF _TALLY > 0
+		      GO ( THISFORM.ga___Busca(THISFORM.nContRegis) ) IN (lcTabla)
+		    ELSE
+		      lcMensaje = ""
+		      llEncontrado  = .F.
+
+		      DO CASE
+		          *- Si el tipo del campo es numérico
+		        CASE TYPE( 'lcExpBusqueda' ) $ "YNFBI"
+		          lcMensaje = PADR(lcExpBusqueda,20)
+
+		        CASE TYPE( 'lcExpBusqueda' ) $ "C"
+		          lcMensaje = ALLTRIM(lcExpBusqueda)
+
+		        CASE TYPE( 'lcExpBusqueda' ) $ "TD"
+		          lcMensaje = DTOC(lcExpBusqueda)
+
+		        CASE TYPE( 'lcExpBusqueda' ) $ "L"
+		          lcMensaje = ""
+		      ENDCASE
+		      IF SET("BELL")="ON"
+		        ?? CHR(7)
+		      ENDIF
+		    ENDIF
+		  ENDIF
+		ENDIF
+
+		WAIT CLEAR
+		THISFORM.HIDE()
+
+		IF NOT llEncontrado
+		  MESSAGEBOX(" No se encontró : " + lcMensaje, 64, 'Aviso')
+		ENDIF
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE cmdcerrar.Click
+		WAIT CLEAR
+		THISFORM.HIDE()
+
+		MESSAGEBOX("Cancelado por el Usuario" , 64, 'Aviso')
+
+		RETURN
+	ENDPROC
+
+
+ENDDEFINE
+*
+*-- EndDefine: dlgbusqueda
+**************************************************

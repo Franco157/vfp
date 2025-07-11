@@ -1,0 +1,16 @@
+REPLACE galeno WITH 1220.42 FOR aaaaliq=0 AND prestacion=180113
+REPLACE galeno WITH 1220.42 FOR aaaaliq=0 AND prestacion=180104
+REPLACE galeno WITH 1220.42 FOR aaaaliq=0 AND prestacion=180110
+REPLACE galeno WITH 1220.42 FOR aaaaliq=0 AND prestacion=180118
+REPLACE galeno WITH 1356 FOR aaaaliq=0 AND prestacion=180116
+REPLACE galeno WITH 1356 FOR aaaaliq=0 AND prestacion=180114
+REPLACE galeno WITH 1356 FOR aaaaliq=0 AND prestacion=180111
+REPLACE galeno WITH 1383.12 FOR aaaaliq=0 AND prestacion=189064
+REPLACE galeno WITH 1951.65 FOR aaaaliq=0 AND prestacion=189021
+REPLACE galeno WITH 1951.65 FOR aaaaliq=0 AND prestacion=189028
+REPLACE galeno WITH 1220.42 FOR aaaaliq=0 and prestacion=189016
+REPLACE galeno WITH 1491.62 FOR aaaaliq=0 AND prestacion=180106
+REPLACE galeno WITH 1491.62 FOR aaaaliq=0 AND prestacion=189018
+REPLACE galeno WITH 2183.21 FOR aaaaliq=0 AND prestacion=189009
+REPLACE galeno WITH 2191.81 FOR aaaaliq=0 AND prestacion=189088
+REPLACE galeno WITH 2191.81 FOR aaaaliq=0 AND prestacion=189090

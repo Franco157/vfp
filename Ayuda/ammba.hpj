@@ -1,0 +1,14 @@
+; This file is maintained by HCW. Do not modify this file directly.
+
+[OPTIONS]
+LCID=0x2c0a 0x0 0x0 ; Español (Argentina)
+REPORT=Yes
+HLP=.\ammba.hlp
+
+[FILES]
+ammba.rtf
+
+[MAP]
+PadronCUIT=100101
+PadronMatricula=100102
+PadronRazon=100103

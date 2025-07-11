@@ -1,0 +1,39 @@
+# Archivos binarios de VFP (no subir)
+*.scx
+*.sct
+*.vcx
+*.vct
+*.frx
+*.frt
+*.lbx
+*.lbt
+*.mnx
+*.mnt
+*.dbc
+*.dct
+*.dcx
+*.pjx
+*.pjt
+
+# Archivos compilados
+*.fxp
+*.app
+*.exe
+*.dll
+*.err
+
+# Archivos de datos (evaluar según tu caso)
+*.dbf
+*.cdx
+*.idx
+*.fpt
+
+# Archivos temporales
+*.bak
+*.tmp
+*.log
+foxuser.*
+*.mem
+
+# Carpetas
+foxbin2prg_run.log
