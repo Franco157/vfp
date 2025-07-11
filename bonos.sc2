@@ -561,50 +561,6 @@ DEFINE CLASS frmbonos AS pform OF "marco.vcx"
 	ENDPROC
 
 	PROCEDURE copiarimagenconformulario
-		* Método del formulario: CopiarImagenConFormulario
-		* NO uses PROCEDURE aquí, solo el código
-		LPARAMETERS tcRutaImagen
-		LOCAL loForm, llExito
-		
-		llExito = .F.
-		
-		TRY
-		    * Crear formulario temporal
-		    loForm = CREATEOBJECT("Form")
-		    loForm.Width = 400
-		    loForm.Height = 400
-		    loForm.AddObject("imgTemp", "Image")
-		    
-		    WITH loForm.imgTemp
-		        .Picture = tcRutaImagen
-		        .Stretch = 1
-		        .Width = loForm.Width
-		        .Height = loForm.Height
-		        .Visible = .T.
-		    ENDWITH
-		    
-		    * Mostrar formulario fuera de pantalla
-		    loForm.Left = -1000
-		    loForm.Show()
-		    
-		    * Seleccionar la imagen
-		    loForm.imgTemp.SetFocus()
-		    DOEVENTS
-		    
-		    * Copiar al portapapeles usando el menú
-		    KEYBOARD '{ALT+E}C' PLAIN
-		    WAIT "" TIMEOUT 0.5
-		    
-		    llExito = .T.
-		    
-		    * Cerrar formulario
-		    loForm.Release()
-		    
-		CATCH
-		    llExito = .F.
-		ENDTRY
-		
-		RETURN llExito
 	ENDPROC
 
 	PROCEDURE descartar
@@ -618,30 +574,6 @@ DEFINE CLASS frmbonos AS pform OF "marco.vcx"
 	ENDPROC
 
 	PROCEDURE formateartextourl
-		* Método del formulario: FormatearTextoURL
-		LPARAMETERS tcTexto
-		LOCAL lcTexto
-		
-		IF EMPTY(tcTexto)
-		    RETURN ""
-		ENDIF
-		
-		lcTexto = ALLTRIM(tcTexto)
-		
-		* Reemplazar caracteres especiales
-		lcTexto = STRTRAN(lcTexto, " ", "%20")
-		lcTexto = STRTRAN(lcTexto, CHR(13)+CHR(10), "%0A")
-		lcTexto = STRTRAN(lcTexto, CHR(10), "%0A")
-		lcTexto = STRTRAN(lcTexto, CHR(13), "%0A")
-		lcTexto = STRTRAN(lcTexto, "ñ", "%C3%B1")
-		lcTexto = STRTRAN(lcTexto, "Ñ", "%C3%91")
-		lcTexto = STRTRAN(lcTexto, "á", "%C3%A1")
-		lcTexto = STRTRAN(lcTexto, "é", "%C3%A9")
-		lcTexto = STRTRAN(lcTexto, "í", "%C3%AD")
-		lcTexto = STRTRAN(lcTexto, "ó", "%C3%B3")
-		lcTexto = STRTRAN(lcTexto, "ú", "%C3%BA")
-		
-		RETURN lcTexto
 	ENDPROC
 
 	PROCEDURE grabar
